@@ -1,9 +1,31 @@
-# Codex Notes
+# CODEX Notes
 
-This repository was created through the URL_SECRET-based gh-automation Cloudflare Worker.
+## Project goal
 
-Pending implementation:
-- Read files from the target Google Drive folder.
-- Run OCR/property extraction.
-- Export CSV, Excel, and TXT outputs.
-- Upload outputs as a GitHub Actions artifact named property-ocr-outputs.
+Build a working automation that reads a target Google Drive folder, extracts property document text, creates structured investment analysis, and publishes CSV / Excel / TXT / JSON outputs through GitHub Actions artifacts.
+
+## Default target folder
+
+`11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD`
+
+## Main commands
+
+```bash
+pip install -r requirements.txt
+ruff check .
+pytest -q
+python -m property_ocr_pipeline run --input-dir samples --output-dir outputs
+```
+
+## CI
+
+Workflow: `.github/workflows/property-ocr.yml`
+
+Artifact: `property-ocr-outputs`
+
+## Secrets
+
+- `GOOGLE_SERVICE_ACCOUNT_JSON`
+- `TARGET_DRIVE_FOLDER_ID`
+
+Do not commit real service account JSON or API keys.
