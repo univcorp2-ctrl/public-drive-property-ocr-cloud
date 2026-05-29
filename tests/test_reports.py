@@ -1,15 +1,1 @@
-from pathlib import Path
-
-from property_ocr_pipeline.cli import run_pipeline
-
-
-def test_pipeline_local_samples(tmp_path: Path):
-    output_dir = tmp_path / "outputs"
-    code = run_pipeline("dummy", output_dir, tmp_path / "downloads", Path("samples"))
-    assert code == 0
-    assert (output_dir / "property_report.csv").exists()
-    assert (output_dir / "property_report.xlsx").exists()
-    assert (output_dir / "property_report.txt").exists()
-    txt = (output_dir / "property_report.txt").read_text(encoding="utf-8")
-    assert "融資スコア順ランキング" in txt
-    assert "大阪" in txt
+exec("from pathlib import Path\nfrom property_ocr_pipeline.cli import run_pipeline\n\ndef test_pipeline_local_samples(tmp_path: Path):\n    output_dir = tmp_path / 'outputs'\n    code = run_pipeline('dummy', output_dir, tmp_path / 'downloads', Path('samples'))\n    assert code == 0\n    assert (output_dir / 'property_report.csv').exists()\n    assert (output_dir / 'property_report.xlsx').exists()\n    assert (output_dir / 'property_report.txt').exists()\n    txt = (output_dir / 'property_report.txt').read_text(encoding='utf-8')\n    assert '融資スコア順ランキング' in txt\n    assert '大阪' in txt\n")
