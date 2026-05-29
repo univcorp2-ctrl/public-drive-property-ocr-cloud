@@ -4,6 +4,12 @@ Google Drive の特定フォルダに置いた物件資料（PDF / 画像 / Exce
 
 出力は CSV / Excel / TXT / JSON に加えて、SQLでいつでも取得できる SQLite DB `property_ocr.db` に保存します。
 
+## はじめて設定する人へ
+
+まず **[docs/beginner-setup.md](docs/beginner-setup.md)** を見てください。画像つきで、Google Cloud、Google Drive共有、GitHub Secrets、Actions実行まで順番に説明しています。
+
+既存の詳細版は **[docs/setup.md](docs/setup.md)**、DBとSQLは **[docs/database.md](docs/database.md)** にあります。
+
 ## できること
 
 - Google Drive の対象フォルダをサービスアカウントで読み取り
@@ -12,21 +18,6 @@ Google Drive の特定フォルダに置いた物件資料（PDF / 画像 / Exce
 - フルローン可能性、融資スコア、買付目安を自動計算
 - CSV / Excel / TXT / JSON / SQLite DB を GitHub Actions artifact `property-ocr-outputs` として保存
 - `python -m property_ocr_pipeline query` でSQL実行
-
-## 初回にユーザー側で設定すること
-
-初心者向けの手順は **[docs/setup.md](docs/setup.md)** にまとめています。
-
-1. Google Cloud で Drive API を有効化する
-2. サービスアカウントを作り、JSONキーを発行する
-3. Google Drive の対象フォルダをサービスアカウントのメールアドレスに共有する
-4. GitHub Secrets に `GOOGLE_SERVICE_ACCOUNT_JSON` と `TARGET_DRIVE_FOLDER_ID` を登録する
-
-対象フォルダIDの初期値:
-
-```text
-11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD
-```
 
 ## 出力ファイル
 
@@ -47,8 +38,6 @@ python -m property_ocr_pipeline query \
   --db outputs/property_ocr.db \
   --sql "select property_name, price, gross_yield, loan_score from properties order by loan_score desc limit 10"
 ```
-
-詳しくは **[docs/database.md](docs/database.md)** を見てください。
 
 ## GitHub Actions
 
