@@ -22,11 +22,15 @@ def normalize_number(text: str) -> int | None:
     return int(value)
 
 
+def clean_value(value: str) -> str:
+    return value.strip().strip("｜|,，:：").strip()
+
+
 def first_match(patterns: list[str], text: str) -> str:
     for pattern in patterns:
         m = re.search(pattern, text, flags=re.MULTILINE | re.IGNORECASE)
         if m:
-            return m.group(1).strip()
+            return clean_value(m.group(1))
     return ""
 
 
@@ -34,10 +38,10 @@ def parse_float(patterns: list[str], text: str) -> float | None:
     raw = first_match(patterns, text)
     if not raw:
         return None
-    try:
-        return float(raw.replace(",", ""))
-    except ValueError:
+    num = re.search(r"[0-9,]+(?:\.[0-9]+)?", raw)
+    if not num:
         return None
+    return float(num.group(0).replace(",", ""))
 
 
 def parse_int(patterns: list[str], text: str) -> int | None:
@@ -49,29 +53,30 @@ def parse_int(patterns: list[str], text: str) -> int | None:
 
 def analyze_property(file: DriveFile, raw_text: str) -> PropertyRecord:
     text = raw_text.replace("　", " ")
+    label_sep = r"[\s\t,，:：|｜]+"
     property_name = first_match([
-        r"(?:物件名|名称|建物名)[:：\s]+(.+)",
-        r"^#\s*(.+)$",
+        rf"(?:物件名|名称|建物名){label_sep}([^\n\r]+)",
+        r"^#\s*([^\n\r]+)$",
     ], text) or Path(file.name).stem
     address = first_match([
-        r"(?:所在地|住所|地番)[:：\s]+(.+)",
+        rf"(?:所在地|住所|地番){label_sep}([^\n\r]+)",
         r"((?:大阪|京都|兵庫|奈良|滋賀|和歌山|東京|神奈川|千葉|埼玉).{4,60})",
     ], text)
-    price = parse_int([r"(?:価格|売買価格|販売価格)[:：\s]*([0-9,\.]+\s*(?:億|万)?)"], text)
-    annual_rent = parse_int([r"(?:年間賃料|満室想定賃料|年収|年間収入)[:：\s]*([0-9,\.]+\s*(?:億|万)?)"], text)
-    gross_yield = parse_float([r"(?:利回り|表面利回り|想定利回り)[:：\s]*([0-9\.]+)\s*%"], text)
+    price = parse_int([rf"(?:価格|売買価格|販売価格){label_sep}([0-9,\.]+\s*(?:億|万)?)"], text)
+    annual_rent = parse_int([rf"(?:年間賃料|満室想定賃料|年収|年間収入){label_sep}([0-9,\.]+\s*(?:億|万)?)"], text)
+    gross_yield = parse_float([rf"(?:利回り|表面利回り|想定利回り){label_sep}([0-9\.]+\s*%)"], text)
     if gross_yield is None and price and annual_rent:
         gross_yield = round(annual_rent / price * 100, 2)
-    land_area = parse_float([r"(?:土地面積|敷地面積)[:：\s]*([0-9,\.]+)\s*(?:㎡|m2|平米)"], text)
-    building_area = parse_float([r"(?:建物面積|延床面積|専有面積)[:：\s]*([0-9,\.]+)\s*(?:㎡|m2|平米)"], text)
-    walk_raw = first_match([r"徒歩\s*([0-9]+)\s*分", r"駅徒歩[:：\s]*([0-9]+)\s*分"], text)
+    land_area = parse_float([rf"(?:土地面積|敷地面積){label_sep}([0-9,\.]+\s*(?:㎡|m2|平米)?)"], text)
+    building_area = parse_float([rf"(?:建物面積|延床面積|専有面積){label_sep}([0-9,\.]+\s*(?:㎡|m2|平米)?)"], text)
+    walk_raw = first_match([r"徒歩\s*([0-9]+)\s*分", rf"駅徒歩{label_sep}([0-9]+)\s*分"], text)
     walk_minutes = int(walk_raw) if walk_raw.isdigit() else None
-    structure = first_match([r"(?:構造)[:：\s]+(.+)", r"(RC造|鉄筋コンクリート造|S造|鉄骨造|木造|軽量鉄骨造)"], text)
-    built_year = first_match([r"(?:築年|築年月|竣工|建築年月)[:：\s]+(.+)", r"(19[0-9]{2}年|20[0-9]{2}年|築\s*[0-9]+\s*年)"], text)
-    station = first_match([r"(?:最寄駅|交通)[:：\s]+(.+)", r"(.+駅\s*徒歩\s*[0-9]+\s*分)"], text)
-    zoning = first_match([r"(?:用途地域)[:：\s]+(.+)"], text)
-    road_access = first_match([r"(?:接道|道路)[:：\s]+(.+)"], text)
-    legal_status = first_match([r"(?:権利|土地権利)[:：\s]+(.+)"], text)
+    structure = first_match([rf"(?:構造){label_sep}([^\n\r]+)", r"(RC造|鉄筋コンクリート造|S造|鉄骨造|木造|軽量鉄骨造)"], text)
+    built_year = first_match([rf"(?:築年|築年月|竣工|建築年月){label_sep}([^\n\r]+)", r"(19[0-9]{2}年|20[0-9]{2}年|築\s*[0-9]+\s*年)"], text)
+    station = first_match([rf"(?:最寄駅|交通){label_sep}([^\n\r]+)", r"([^\n\r]+駅\s*徒歩\s*[0-9]+\s*分)"], text)
+    zoning = first_match([rf"(?:用途地域){label_sep}([^\n\r]+)"], text)
+    road_access = first_match([rf"(?:接道|道路){label_sep}([^\n\r]+)"], text)
+    legal_status = first_match([rf"(?:権利|土地権利){label_sep}([^\n\r]+)"], text)
 
     score = score_property(price, gross_yield, structure, walk_minutes, land_area, text)
     possibility = "高" if score >= 75 else "中" if score >= 55 else "低〜要確認"
