@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="560" viewBox="0 0 1180 560" role="img" aria-label="Property OCR architecture">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f7fbff"/><stop offset="1" stop-color="#eef7f2"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.16"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10 Z" fill="#34699a"/></marker>
+    <style>
+      .title{font:700 30px system-ui, -apple-system, Segoe UI, sans-serif;fill:#123047}.label{font:700 17px system-ui, -apple-system, Segoe UI, sans-serif;fill:#123047}.small{font:14px system-ui, -apple-system, Segoe UI, sans-serif;fill:#40566b}.box{fill:#fff;stroke:#b7d2e8;stroke-width:2;rx:18;filter:url(#shadow)}.gpt{fill:#123047}.arrow{stroke:#34699a;stroke-width:3;fill:none;marker-end:url(#arrow)}.pill{fill:#e8f4ff;stroke:#a8cae8}.warn{fill:#fff7e6;stroke:#f0bf57}.out{fill:#ecfff3;stroke:#93d1aa}
+    </style>
+  </defs>
+  <rect width="1180" height="560" fill="url(#bg)"/>
+  <text x="40" y="55" class="title">Google Drive 物件資料 OCR・分析 自動化アーキテクチャ</text>
+  <text x="42" y="86" class="small">Drive巡回・抽出・保存は自動処理側。Custom GPTは分析済み結果を説明・比較・資料化する窓口。</text>
+
+  <rect class="box" x="45" y="135" width="190" height="115"/>
+  <text x="78" y="173" class="label">Google Drive</text>
+  <text x="72" y="201" class="small">物件概要書</text><text x="72" y="222" class="small">PDF / 画像 / Excel / CSV</text>
+
+  <rect class="box" x="300" y="125" width="205" height="135"/>
+  <text x="340" y="164" class="label">GitHub Actions</text>
+  <text x="330" y="193" class="small">手動・毎日自動実行</text><text x="330" y="214" class="small">テスト → 解析 → artifact</text>
+
+  <rect class="box" x="570" y="125" width="210" height="135"/>
+  <text x="617" y="164" class="label">Python Pipeline</text>
+  <text x="604" y="193" class="small">Drive download</text><text x="604" y="214" class="small">Text extraction</text><text x="604" y="235" class="small">Property scoring</text>
+
+  <rect class="box out" x="845" y="125" width="220" height="135"/>
+  <text x="904" y="164" class="label">Outputs</text>
+  <text x="889" y="193" class="small">CSV / Excel / TXT / JSON</text><text x="889" y="214" class="small">artifact: property-ocr-outputs</text>
+
+  <rect class="box" x="470" y="340" width="250" height="125"/>
+  <circle cx="512" cy="402" r="28" class="gpt"/><text x="499" y="410" font-size="24" fill="#fff" font-family="system-ui">GPT</text>
+  <text x="555" y="384" class="label">Custom GPT</text>
+  <text x="555" y="413" class="small">ランキング表示</text><text x="555" y="434" class="small">銀行向け説明・買付判断</text>
+
+  <rect class="pill" x="65" y="310" width="245" height="92" rx="18"/>
+  <text x="91" y="343" class="label">初回だけ必要</text>
+  <text x="91" y="370" class="small">サービスアカウント作成</text><text x="91" y="391" class="small">Driveフォルダ共有 / GitHub Secrets</text>
+
+  <rect class="warn" x="820" y="330" width="285" height="105" rx="18"/>
+  <text x="850" y="365" class="label">将来拡張</text>
+  <text x="850" y="393" class="small">Cloudflare Worker + D1/R2</text><text x="850" y="414" class="small">GET /report/today をGPT Actions化</text>
+
+  <path class="arrow" d="M235 192 H300"/><path class="arrow" d="M505 192 H570"/><path class="arrow" d="M780 192 H845"/>
+  <path class="arrow" d="M955 260 C930 330 790 398 720 402"/>
+  <path class="arrow" d="M310 355 C360 310 392 260 402 260"/>
+  <path class="arrow" d="M955 260 V330"/>
+</svg>
