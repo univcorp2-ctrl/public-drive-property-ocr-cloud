@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: Property OCR Report API
+  version: 0.1.0
+  description: Read-only API shape for a future Cloudflare Worker that serves generated property reports to Custom GPT.
+servers:
+  - url: https://example-worker.example.workers.dev
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      x-openai-isConsequential: false
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /report/today:
+    get:
+      operationId: getTodayReport
+      x-openai-isConsequential: false
+      summary: Get today's property analysis report
+      responses:
+        "200":
+          description: Today's report
+          content:
+            application/json:
+              schema:
+                type: object
+  /properties/ranking:
+    get:
+      operationId: getPropertyRanking
+      x-openai-isConsequential: false
+      summary: Get properties ranked by loan score
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Ranked properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
