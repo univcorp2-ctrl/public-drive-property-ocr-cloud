@@ -98,7 +98,7 @@ ruff check .
 3. dependency install
 4. ruff lint
 5. pytest
-6. サンプルCSV/Excel/TXT生成
+6. サンプル出力生成
 7. `property-ocr-outputs` artifact upload
 
 ## アーキテクチャ
