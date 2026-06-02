@@ -1,47 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="560" viewBox="0 0 1180 560" role="img" aria-label="Property OCR architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">LIFF property volume chat architecture</title>
+  <desc id="desc">Architecture diagram for LIFF frontend, FastAPI backend, auth, OCR, volume logic, SQLite and export artifacts.</desc>
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f7fbff"/><stop offset="1" stop-color="#eef7f2"/></linearGradient>
-    <filter id="shadow"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.16"/></filter>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10 Z" fill="#34699a"/></marker>
-    <style>
-      .title{font:700 30px system-ui, -apple-system, Segoe UI, sans-serif;fill:#123047}.label{font:700 17px system-ui, -apple-system, Segoe UI, sans-serif;fill:#123047}.small{font:14px system-ui, -apple-system, Segoe UI, sans-serif;fill:#40566b}.box{fill:#fff;stroke:#b7d2e8;stroke-width:2;rx:18;filter:url(#shadow)}.gpt{fill:#123047}.arrow{stroke:#34699a;stroke-width:3;fill:none;marker-end:url(#arrow)}.pill{fill:#e8f4ff;stroke:#a8cae8}.warn{fill:#fff7e6;stroke:#f0bf57}.out{fill:#ecfff3;stroke:#93d1aa}
-    </style>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#ecfff4"/><stop offset="100%" stop-color="#eef4ff"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#102a43" flood-opacity="0.18"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/></marker>
+    <style>.card{fill:#fff;stroke:#d7e2ee;stroke-width:2;filter:url(#shadow)}.title{font:700 25px system-ui,-apple-system,Segoe UI,sans-serif;fill:#102a43}.text{font:500 17px system-ui,-apple-system,Segoe UI,sans-serif;fill:#334e68}.small{font:500 14px system-ui,-apple-system,Segoe UI,sans-serif;fill:#627d98}.pill{fill:#06c755}.pillText{font:800 14px system-ui,-apple-system,Segoe UI,sans-serif;fill:#fff}.line{stroke:#2563eb;stroke-width:4;fill:none;marker-end:url(#arrow)}.dashed{stroke-dasharray:8 8}</style>
   </defs>
-  <rect width="1180" height="560" fill="url(#bg)"/>
-  <text x="40" y="55" class="title">Google Drive 物件資料 OCR・分析 自動化アーキテクチャ</text>
-  <text x="42" y="86" class="small">Drive巡回・抽出・保存は自動処理側。Custom GPTは分析済み結果を説明・比較・資料化する窓口。</text>
-
-  <rect class="box" x="45" y="135" width="190" height="115"/>
-  <text x="78" y="173" class="label">Google Drive</text>
-  <text x="72" y="201" class="small">物件概要書</text><text x="72" y="222" class="small">PDF / 画像 / Excel / CSV</text>
-
-  <rect class="box" x="300" y="125" width="205" height="135"/>
-  <text x="340" y="164" class="label">GitHub Actions</text>
-  <text x="330" y="193" class="small">手動・毎日自動実行</text><text x="330" y="214" class="small">テスト → 解析 → artifact</text>
-
-  <rect class="box" x="570" y="125" width="210" height="135"/>
-  <text x="617" y="164" class="label">Python Pipeline</text>
-  <text x="604" y="193" class="small">Drive download</text><text x="604" y="214" class="small">Text extraction</text><text x="604" y="235" class="small">Property scoring</text>
-
-  <rect class="box out" x="845" y="125" width="220" height="135"/>
-  <text x="904" y="164" class="label">Outputs</text>
-  <text x="889" y="193" class="small">CSV / Excel / TXT / JSON</text><text x="889" y="214" class="small">artifact: property-ocr-outputs</text>
-
-  <rect class="box" x="470" y="340" width="250" height="125"/>
-  <circle cx="512" cy="402" r="28" class="gpt"/><text x="499" y="410" font-size="24" fill="#fff" font-family="system-ui">GPT</text>
-  <text x="555" y="384" class="label">Custom GPT</text>
-  <text x="555" y="413" class="small">ランキング表示</text><text x="555" y="434" class="small">銀行向け説明・買付判断</text>
-
-  <rect class="pill" x="65" y="310" width="245" height="92" rx="18"/>
-  <text x="91" y="343" class="label">初回だけ必要</text>
-  <text x="91" y="370" class="small">サービスアカウント作成</text><text x="91" y="391" class="small">Driveフォルダ共有 / GitHub Secrets</text>
-
-  <rect class="warn" x="820" y="330" width="285" height="105" rx="18"/>
-  <text x="850" y="365" class="label">将来拡張</text>
-  <text x="850" y="393" class="small">Cloudflare Worker + D1/R2</text><text x="850" y="414" class="small">GET /report/today をGPT Actions化</text>
-
-  <path class="arrow" d="M235 192 H300"/><path class="arrow" d="M505 192 H570"/><path class="arrow" d="M780 192 H845"/>
-  <path class="arrow" d="M955 260 C930 330 790 398 720 402"/>
-  <path class="arrow" d="M310 355 C360 310 392 260 402 260"/>
-  <path class="arrow" d="M955 260 V330"/>
+  <rect width="1280" height="760" fill="url(#bg)"/>
+  <text x="64" y="70" class="title" font-size="34">ボリューム検討チャット Clone Architecture</text>
+  <text x="64" y="104" class="text">LINE LIFF入口から、認証・OCR・ボリューム判定・出力生成までを独自実装で構成</text>
+  <rect x="64" y="160" width="230" height="130" rx="24" class="card"/>
+  <text x="94" y="205" class="title">User</text><text x="94" y="237" class="text">LINE / Browser</text><text x="94" y="265" class="small">画像・資料・note ID</text>
+  <rect x="380" y="130" width="280" height="190" rx="24" class="card"/>
+  <rect x="410" y="158" width="86" height="28" rx="14" class="pill"/><text x="427" y="178" class="pillText">Frontend</text>
+  <text x="410" y="218" class="title">LIFF Static UI</text><text x="410" y="250" class="text">liff.init / note ID入力</text><text x="410" y="278" class="text">ファイルアップロード</text>
+  <rect x="760" y="130" width="320" height="190" rx="24" class="card"/>
+  <rect x="790" y="158" width="88" height="28" rx="14" class="pill"/><text x="808" y="178" class="pillText">Backend</text>
+  <text x="790" y="218" class="title">FastAPI</text><text x="790" y="250" class="text">/api/session / /api/analyze</text><text x="790" y="278" class="text">REST + multipart upload</text>
+  <rect x="124" y="420" width="220" height="130" rx="24" class="card"/><text x="154" y="464" class="title">note ID Auth</text><text x="154" y="496" class="text">Allowlist / Open</text><text x="154" y="524" class="small">認証回避なし</text>
+  <rect x="408" y="420" width="220" height="130" rx="24" class="card"/><text x="438" y="464" class="title">OCR Adapter</text><text x="438" y="496" class="text">fallback / provider</text><text x="438" y="524" class="small">差し替え可能</text>
+  <rect x="692" y="420" width="240" height="130" rx="24" class="card"/><text x="722" y="464" class="title">Volume Logic</text><text x="722" y="496" class="text">FAR / BCR / Road</text><text x="722" y="524" class="small">概算判定</text>
+  <rect x="996" y="420" width="220" height="130" rx="24" class="card"/><text x="1026" y="464" class="title">Exports</text><text x="1026" y="496" class="text">CSV / Excel / TXT</text><text x="1026" y="524" class="small">artifact保存</text>
+  <rect x="760" y="610" width="320" height="90" rx="24" class="card"/><text x="790" y="652" class="title">SQLite</text><text x="790" y="680" class="text">sessions / jobs / output paths</text>
+  <path d="M294 225 C326 225 342 225 380 225" class="line"/><path d="M660 225 C700 225 720 225 760 225" class="line"/>
+  <path d="M868 320 C760 370 405 370 274 420" class="line"/><path d="M875 320 C780 376 608 382 528 420" class="line"/>
+  <path d="M904 320 C872 360 842 384 820 420" class="line"/><path d="M932 485 C958 485 970 485 996 485" class="line"/><path d="M920 320 L920 610" class="line dashed"/>
 </svg>
