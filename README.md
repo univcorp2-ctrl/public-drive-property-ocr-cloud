@@ -1,98 +1,106 @@
-<!-- AI_README_SETUP_GUIDE_START -->
-## 🧭 画像付き初期設定ガイド
-
-![README 画像付き初期設定ガイド](docs/assets/readme-setup-guide.svg)
-
-このリポジトリ **public-drive-property-ocr-cloud** を初めて開いた人は、まずここだけ見れば初期設定から実行、成果物確認まで進められます。
-
-### 最初にやること
-
-1. 必要なSecretや外部サービス設定を確認します。
-2. GitHub Actions または README の実行手順に沿って動かします。
-3. 実行ログと成果物を確認します。
-4. エラー時は Actions の失敗ステップと Secret名を確認します。
-
-### 詳しい画像付きガイド
-
-- [docs/setup-visual-guide.md](docs/setup-visual-guide.md)
-- [docs/image-generation-prompts.md](docs/image-generation-prompts.md)
-
-> SecretやAPIキーの実値は、README、Issue、ログ、画像に絶対に貼らないでください。例では `********` または `YOUR_SECRET_HERE` を使います。
-
-<!-- AI_README_SETUP_GUIDE_END -->
-
-
 # Public Drive Property OCR Cloud
 
-Google Drive の特定フォルダに置いた物件資料（PDF / 画像 / Excel / CSV / TXT）を、GitHub Actions で自動取得し、テキスト抽出・物件情報の構造化・融資/買付候補スコアリングを行います。
+LINE LIFF風の「ボリューム検討チャット」を、合法的な独自実装として再現したWebアプリです。
 
-出力は CSV / Excel / TXT / JSON に加えて、SQLでいつでも取得できる SQLite DB `property_ocr.db` に保存します。
+- LINE LIFF SDKに対応した静的フロントエンド
+- note ID風の会員認証
+- 画像/資料アップロード
+- OCR差し替え可能な抽出レイヤー
+- 土地面積、建ぺい率、容積率、前面道路幅員からのボリューム概算
+- CSV / Excel / TXT 出力
+- GitHub Actionsでサンプル成果物を `property-ocr-outputs` artifact として保存
+- アーキテクチャ画像とロジック画像を `docs/` に同梱
 
-## はじめて設定する人へ
+> この実装は、第三者サービスの非公開API、認証回避、トークン取得、既存アプリのサーバー実装の複製を行いません。公開UXから着想した独自アプリです。
 
-まず **[docs/beginner-setup.md](docs/beginner-setup.md)** を見てください。画像つきで、Google Cloud、Google Drive共有、GitHub Secrets、Actions実行まで順番に説明しています。
+## 画面と処理の全体像
 
-既存の詳細版は **[docs/setup.md](docs/setup.md)**、DBとSQLは **[docs/database.md](docs/database.md)** にあります。
+![Architecture](docs/architecture.svg)
 
-## できること
+![Logic Flow](docs/logic-flow.svg)
 
-- Google Drive の対象フォルダをサービスアカウントで読み取り
-- PDF / Excel / CSV / TXT を処理
-- 物件名、所在地、価格、利回り、賃料、面積、築年、駅徒歩などを抽出
-- フルローン可能性、融資スコア、買付目安を自動計算
-- CSV / Excel / TXT / JSON / SQLite DB を GitHub Actions artifact `property-ocr-outputs` として保存
-- `python -m property_ocr_pipeline query` でSQL実行
-
-## 出力ファイル
-
-| ファイル | 内容 |
-|---|---|
-| `property_report.csv` | 物件一覧CSV |
-| `property_report.xlsx` | Excel版レポート |
-| `property_report.txt` | GPTや人間が読みやすい要約 |
-| `property_report.json` | API連携しやすいJSON |
-| `property_ocr.db` | SQLで取得できるSQLite DB |
-| `query_examples.sql` | よく使うSQL例 |
-| `analysis_run.json` | 実行結果メタ情報 |
-
-## SQL取得例
-
-```bash
-python -m property_ocr_pipeline query \
-  --db outputs/property_ocr.db \
-  --sql "select property_name, price, gross_yield, loan_score from properties order by loan_score desc limit 10"
-```
-
-## GitHub Actions
-
-1. GitHubのリポジトリ画面で **Actions** を開く
-2. **Property OCR Pipeline** を選ぶ
-3. **Run workflow** を押す
-4. 完了後、artifact **property-ocr-outputs** をダウンロードする
-
-## ローカル実行
+## クイックスタート
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m property_ocr_pipeline run --input-dir samples --output-dir outputs
+uvicorn app.main:app --reload
 ```
 
-Google Driveを読む場合:
+ブラウザで開きます。
+
+```text
+http://127.0.0.1:8000
+```
+
+デモnote ID:
+
+```text
+demo-note-001
+```
+
+## サンプル入力
+
+アップロード欄には任意のファイルを入れ、OCR補助テキストに以下のような情報を入れると判定できます。
+
+```text
+所在地: 東京都サンプル区1-2-3
+土地面積: 180.25㎡
+用途地域: 第一種住居地域
+建ぺい率: 60%
+容積率: 300%
+前面道路幅員: 4.0m
+平均住戸面積: 45㎡
+```
+
+## API
+
+| Method | Path | 説明 |
+|---|---|---|
+| GET | `/api/health` | ヘルスチェック |
+| GET | `/api/config` | LIFF IDなどの公開設定 |
+| POST | `/api/session` | note ID認証 |
+| POST | `/api/analyze` | ファイル + OCR補助テキストから判定 |
+| GET | `/api/jobs/{job_id}` | 判定結果取得 |
+| GET | `/api/jobs/{job_id}/exports/{kind}` | `csv`, `xlsx`, `txt` をダウンロード |
+
+## 主要な環境変数
+
+| Name | Default | 用途 |
+|---|---|---|
+| `LIFF_ID` | 空 | LINE Developersで発行したLIFF ID |
+| `NOTE_ID_ALLOWLIST` | `demo-note-001,demo-note-002,member-test` | 利用を許可するnote ID |
+| `NOTE_AUTH_MODE` | `allowlist` | `allowlist` または `open` |
+| `APP_DATA_DIR` | `./data` | SQLite、アップロード、出力の保存先 |
+| `OCR_ENGINE` | `fallback` | `fallback` または `pytesseract` |
+| `TARGET_DRIVE_FOLDER_ID` | `11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD` | 将来のGoogle Drive連携用ID |
+
+## LIFFで動かす手順
+
+詳細は [`docs/setup.md`](docs/setup.md) を見てください。
+
+要点だけ書くと、公開URLを用意して、LINE Developers ConsoleでLIFFアプリのEndpoint URLにそのURLを設定し、アプリ側の環境変数 `LIFF_ID` に発行されたLIFF IDを設定します。
+
+## テスト
 
 ```bash
-export GOOGLE_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'
-export TARGET_DRIVE_FOLDER_ID='11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD'
-python -m property_ocr_pipeline run --output-dir outputs
+pytest
+ruff check .
 ```
+
+## GitHub Actions
+
+`.github/workflows/ci.yml` は以下を実行します。
+
+1. checkout
+2. Python setup
+3. dependency install
+4. ruff lint
+5. pytest
+6. サンプルCSV/Excel/TXT生成
+7. `property-ocr-outputs` artifact upload
 
 ## アーキテクチャ
 
-![architecture](docs/architecture.svg)
-
-詳しい構成は **[docs/architecture.md](docs/architecture.md)** を見てください。
-
-## 注意
-
-融資スコアや銀行候補は、資料から読み取れる情報に基づく簡易判定です。実際の融資可否、法令適合、再建築可否、担保評価、収益性は専門家確認が必要です。
+詳しくは [`docs/architecture.md`](docs/architecture.md) を参照してください。
