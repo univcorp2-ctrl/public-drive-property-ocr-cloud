@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app import db
 from app.main import app
 
 client = TestClient(app)
@@ -12,6 +13,7 @@ def test_health() -> None:
 
 
 def test_session_and_analyze_flow() -> None:
+    db.init_db()
     session_response = client.post("/api/session", json={"note_id": "demo-note-001"})
     assert session_response.status_code == 200
     token = session_response.json()["token"]
@@ -37,5 +39,6 @@ def test_session_and_analyze_flow() -> None:
 
 
 def test_invalid_note_id_rejected() -> None:
+    db.init_db()
     response = client.post("/api/session", json={"note_id": "not-allowed"})
     assert response.status_code == 403
