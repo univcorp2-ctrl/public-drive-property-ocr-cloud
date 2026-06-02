@@ -1,0 +1,9 @@
+flowchart LR
+  U[LINE User / Browser] --> L[LIFF Frontend]
+  L --> A[FastAPI]
+  A --> N[note ID Auth]
+  A --> O[OCR Adapter]
+  A --> V[Volume Logic]
+  A --> D[(SQLite)]
+  V --> E[CSV / Excel / TXT]
+  E --> G[GitHub Actions Artifact]
