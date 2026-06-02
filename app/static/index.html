@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ボリューム検討チャット Clone</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">LINE LIFF style</p>
+          <h1>ボリューム検討チャット</h1>
+          <p>note ID認証、画像アップロード、OCR補助テキスト、土地ボリューム概算を1画面で実行します。</p>
+        </div>
+        <div id="liffStatus" class="badge">LIFF確認中</div>
+      </section>
+
+      <section class="card" id="authCard">
+        <h2>1. 利用認証</h2>
+        <label for="noteId">note ID</label>
+        <div class="row">
+          <input id="noteId" placeholder="demo-note-001" autocomplete="username" />
+          <button id="authButton">認証する</button>
+        </div>
+        <p id="authMessage" class="muted">デモでは demo-note-001 が使えます。</p>
+      </section>
+
+      <section class="card hidden" id="chatCard">
+        <h2>2. 物件資料アップロード</h2>
+        <div class="chat">
+          <div class="bubble bot">プラン画像または資料をアップロードしてください。OCR補助テキストがあると精度が上がります。</div>
+        </div>
+        <label for="fileInput">画像/資料</label>
+        <input id="fileInput" type="file" />
+        <label for="manualText">OCR補助テキスト</label>
+        <textarea id="manualText" rows="9">所在地: 東京都サンプル区1-2-3
+土地面積: 180.25㎡
+用途地域: 第一種住居地域
+建ぺい率: 60%
+容積率: 300%
+前面道路幅員: 4.0m
+平均住戸面積: 45㎡</textarea>
+        <button id="analyzeButton">OCRとボリューム判定を実行</button>
+      </section>
+
+      <section class="card hidden" id="resultCard">
+        <h2>3. 判定結果</h2>
+        <pre id="resultJson"></pre>
+        <div class="downloads">
+          <a id="csvLink" href="#">CSV</a>
+          <a id="xlsxLink" href="#">Excel</a>
+          <a id="txtLink" href="#">TXT</a>
+        </div>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
