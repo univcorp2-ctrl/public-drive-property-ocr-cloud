@@ -1,0 +1,17 @@
+flowchart TD
+  A[Start: LIFF or Web open] --> B[Load /api/config]
+  B --> C{LIFF_ID exists?}
+  C -- yes --> D[liff.init]
+  C -- no --> E[Web demo mode]
+  D --> F[note ID input]
+  E --> F
+  F --> G{Allowlisted?}
+  G -- no --> H[Reject]
+  G -- yes --> I[Session token]
+  I --> J[Upload file + OCR helper text]
+  J --> K[OCR adapter]
+  K --> L[Extract land constraints]
+  L --> M[Apply FAR / road width rule]
+  M --> N[Estimate footprint, floor area, floors, units]
+  N --> O[Create CSV / Excel / TXT]
+  O --> P[Return result and download links]
