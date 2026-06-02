@@ -1,137 +1,86 @@
-# 初回設定ガイド
+# Setup Guide
 
-このページは、はじめてGoogle Drive連携を設定する人向けの手順です。
+## 1. ローカル起動
 
-## 完成イメージ
-
-![architecture](architecture.svg)
-
-ユーザーはGoogle Driveに物件資料を入れるだけです。あとはGitHub Actionsが自動で分析し、CSV / Excel / TXTを作ります。
-
-## 1. Google Driveに対象フォルダを作る
-
-おすすめのフォルダ構成です。
-
-```text
-不動産AI分析/
-  01_未分析/
-  02_分析済み/
-  03_要確認/
-  04_買付候補/
-  99_原本/
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-最初は `01_未分析` だけでも大丈夫です。
-
-フォルダURLの例:
+開くURL:
 
 ```text
-https://drive.google.com/drive/folders/11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD
+http://127.0.0.1:8000
 ```
 
-この最後の部分がフォルダIDです。
+## 2. デモ認証
+
+デフォルトでは以下のnote IDが使えます。
 
 ```text
-11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD
+demo-note-001
+demo-note-002
+member-test
 ```
 
-## 2. Google CloudでDrive APIを有効化する
+本番では環境変数で許可IDを指定します。
 
-1. Google Cloud Consoleを開く
-2. 新しいプロジェクトを作る
-3. 「APIとサービス」へ進む
-4. 「ライブラリ」で **Google Drive API** を検索する
-5. **有効にする** を押す
-
-## 3. サービスアカウントを作る
-
-1. Google Cloud Consoleで「IAMと管理」→「サービスアカウント」へ進む
-2. 「サービスアカウントを作成」を押す
-3. 名前を `property-ocr-drive-reader` のようにする
-4. 作成後、サービスアカウントの詳細画面を開く
-5. 「キー」→「鍵を追加」→「新しい鍵を作成」
-6. JSON形式を選び、ダウンロードする
-
-このJSONは秘密情報です。人に送らず、GitHub Secretsにだけ登録します。
-
-## 4. Driveフォルダをサービスアカウントに共有する
-
-1. Google Driveで対象フォルダを右クリック
-2. 「共有」を押す
-3. サービスアカウントのメールアドレスを入力する
-4. 権限は **閲覧者** にする
-5. 共有する
-
-サービスアカウントのメールは次のような形式です。
-
-```text
-property-ocr-drive-reader@your-project.iam.gserviceaccount.com
+```bash
+export NOTE_ID_ALLOWLIST="member-a,member-b,member-c"
 ```
 
-## 5. GitHub Secretsを登録する
+全員を通す検証モードにする場合:
 
-GitHubのリポジトリで次へ進みます。
-
-```text
-Settings → Secrets and variables → Actions → New repository secret
+```bash
+export NOTE_AUTH_MODE=open
 ```
 
-登録するSecretは2つです。
+## 3. LIFF設定
 
-### GOOGLE_SERVICE_ACCOUNT_JSON
+1. LINE Developers ConsoleでLINEログインチャネルを作成します。
+2. LIFFタブからLIFFアプリを追加します。
+3. Endpoint URLに公開済みWebアプリURLを設定します。
+4. 発行されたLIFF IDをアプリ環境変数に入れます。
 
-Google CloudでダウンロードしたJSONファイルの中身を、全文そのまま貼り付けます。
+```bash
+export LIFF_ID="1234567890-abcdefg"
+```
 
-### TARGET_DRIVE_FOLDER_ID
+アプリは起動時に `/api/config` からLIFF IDを読み、設定されていれば `liff.init({ liffId })` を実行します。
 
-対象フォルダIDを入れます。
+## 4. OCR本番化
+
+デフォルトのOCRはfallbackです。実運用では `app/services/ocr.py` を以下のいずれかに置き換えてください。
+
+- Google Cloud Vision
+- Azure AI Vision
+- AWS Textract
+- pytesseract + Tesseract runtime
+
+pytesseractを試す場合は、OS側にTesseractと日本語言語データを入れたうえで、Pythonパッケージを追加し、次を設定します。
+
+```bash
+export OCR_ENGINE=pytesseract
+```
+
+## 5. 出力
+
+判定ごとに以下を生成します。
+
+- CSV
+- Excel
+- TXT
+
+GitHub Actionsでは `property-ocr-outputs` というartifact名でサンプル出力を保存します。
+
+## 6. Google Drive連携予定値
+
+既定のターゲットフォルダID:
 
 ```text
 11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD
 ```
 
-## 6. GitHub Actionsを手動実行する
-
-1. リポジトリの **Actions** を開く
-2. **Property OCR Pipeline** を選ぶ
-3. **Run workflow** を押す
-4. 完了後、artifact **property-ocr-outputs** をダウンロードする
-
-中には次のファイルが入っています。
-
-```text
-property_report.csv
-property_report.xlsx
-property_report.txt
-property_report.json
-analysis_run.json
-```
-
-## 7. Custom GPTで使う
-
-一番簡単な方法は、`property_report.txt` または `property_report.xlsx` をCustom GPTにアップロードして、次のように聞くことです。
-
-```text
-この物件レポートを、フルローン可能性が高い順に整理して。
-大阪の金融機関に説明しやすい買付候補を上位3件に絞って。
-```
-
-次の段階では、Cloudflare Workerで `property_report.json` を読み取りAPI化します。
-
-## よくあるつまずき
-
-### Driveのファイルが0件になる
-
-対象フォルダがサービスアカウントに共有されていない可能性が高いです。フォルダ単位で共有してください。
-
-### JSONエラーになる
-
-`GOOGLE_SERVICE_ACCOUNT_JSON` にJSONファイル名ではなく、JSONの中身全文を貼ってください。
-
-### GitHub Actionsは成功したがサンプル結果しか出ない
-
-Secretsが未設定の場合は、テスト用サンプルを処理する設計です。`GOOGLE_SERVICE_ACCOUNT_JSON` と `TARGET_DRIVE_FOLDER_ID` を登録してください。
-
-### 画像OCRが弱い
-
-標準CIではTesseractを必須にしていません。画像PDFが多い場合は、Google Cloud Vision APIやCloudflare Workers AIなどのOCRへ拡張するのがおすすめです。
+現実のGoogle Drive書き込みを行う場合は、サービスアカウント認証とDrive API実装を追加してください。
