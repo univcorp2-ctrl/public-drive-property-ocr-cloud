@@ -1,44 +1,103 @@
-# アーキテクチャ
+# Architecture
 
-このリポジトリは、Google Driveに入れた物件資料をGitHub Actionsで定期処理し、Custom GPTが読みやすい成果物とSQL取得可能なDBに変換します。
+このリポジトリは、LINE LIFF風の不動産ボリューム検討チャットを独自実装したものです。
 
-![architecture](architecture.svg)
+## 画像版
 
-```mermaid
-flowchart LR
-    U[ユーザー\nDriveに資料を入れる] --> D[Google Drive\n対象フォルダ]
-    D --> A[GitHub Actions\nProperty OCR Pipeline]
-    A --> G[Google Drive API\nService Account]
-    G --> X[Downloader]
-    X --> T[Text Extractor\nPDF/Excel/CSV/TXT]
-    T --> P[Property Analyzer\n抽出・融資スコア]
-    P --> S[(SQLite\nproperty_ocr.db)]
-    P --> O[CSV / Excel / TXT / JSON]
-    S --> R[Actions Artifact\nproperty-ocr-outputs]
-    O --> R
-    R --> C[Custom GPT\n説明・比較・資料化]
-```
+![Architecture](architecture.svg)
 
-## DB設計
+![Logic Flow](logic-flow.svg)
 
-SQLite DB `property_ocr.db` を毎回生成します。
-
-| テーブル | 役割 |
-|---|---|
-| `properties` | 物件ごとの抽出・分析結果 |
-| `drive_files` | 入力ファイル管理 |
-| `analysis_runs` | 実行履歴 |
-
-SQL例は **[database.md](database.md)** にまとめています。
-
-## 将来拡張
-
-SQLiteで安定したあと、Cloudflare D1へ同じスキーマを移すと、Custom GPT Actionsから読み取り専用APIで参照できます。
+## 全体像
 
 ```mermaid
 flowchart LR
-    A[GitHub Actions] --> DB[(SQLite property_ocr.db)]
-    DB --> W[Cloudflare Worker]
-    W --> D1[(D1 DB)]
-    G[Custom GPT] -->|GET /properties/ranking| W
+  U[LINE User / Browser] --> L[LIFF Frontend]
+  L --> A[FastAPI]
+  A --> N[note ID Auth]
+  A --> O[OCR Adapter]
+  A --> V[Volume Logic]
+  A --> D[(SQLite)]
+  V --> E[CSV / Excel / TXT]
+  E --> G[GitHub Actions Artifact]
 ```
+
+## フロントエンド
+
+`app/static/` に静的HTML/CSS/JSを置いています。`LIFF_ID` が設定されている場合は、LIFF SDKの `liff.init()` を実行します。未設定の場合は通常Webアプリとして動きます。
+
+## バックエンド
+
+FastAPIで以下を提供します。
+
+- `/api/session`: note IDを検証し、セッショントークンを発行
+- `/api/analyze`: ファイル保存、OCR抽出、ボリューム判定、出力生成
+- `/api/jobs/{job_id}`: 判定結果取得
+- `/api/jobs/{job_id}/exports/{kind}`: CSV / Excel / TXTダウンロード
+
+## DB
+
+SQLiteにセッションとジョブ履歴を保存します。
+
+```mermaid
+erDiagram
+  sessions {
+    text token PK
+    text note_id
+    text created_at
+  }
+  jobs {
+    text job_id PK
+    text token
+    text note_id
+    text upload_name
+    text extracted_text
+    text result_json
+    text output_dir
+    text created_at
+  }
+```
+
+## OCR
+
+`app/services/ocr.py` がOCR境界です。デフォルトではCIで安定するfallback実装を使います。実運用ではこの層をGoogle Vision、Azure AI Vision、AWS Textract、pytesseractなどに差し替えます。
+
+## ボリューム判定ロジック
+
+`app/services/volume.py` が以下を抽出・計算します。
+
+1. 土地面積
+2. 用途地域
+3. 建ぺい率
+4. 容積率
+5. 前面道路幅員
+6. 道路幅員による容積率制限
+7. 建築面積上限
+8. 延床面積上限
+9. 想定賃貸面積
+10. 想定階数・戸数
+
+## CI/CD
+
+GitHub Actionsでlint、test、サンプル出力生成、artifact uploadを行います。
+
+## Secrets
+
+現時点で必須Secretはありません。実運用OCRやLINE Messaging APIなどを追加する場合は、以下のようなSecret名を使ってください。
+
+- `LIFF_ID`
+- `NOTE_ID_ALLOWLIST`
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON`
+- `AZURE_VISION_ENDPOINT`
+- `AZURE_VISION_KEY`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+## 今後の拡張
+
+- Cloud OCR実装
+- note APIまたは会員DBとの連携
+- Google Driveへの自動保存
+- 物件別の履歴管理
+- LINE Messaging APIによる結果通知
+- PDF図面のページ別OCR
