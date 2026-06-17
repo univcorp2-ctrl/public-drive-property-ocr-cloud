@@ -1,1 +1,25 @@
-exec('import sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path(__file__).resolve().parents[1]))\nfrom app.main import analyze_text,write_exports\nsample=chr(10).join(["所在地: 東京都サンプル区1-2-3","土地面積: 180.25㎡","用途地域: 第一種住居地域","建ぺい率: 60%","容積率: 300%","前面道路幅員: 4.0m","平均住戸面積: 45㎡"])\npaths=write_exports("sample",analyze_text(sample),sample,Path("property-ocr-outputs"))\nfor k,v in paths.items():\n    print(f"generated {k}: {v}")\n')
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from property_ocr.extract import extract_documents
+from property_ocr.outputs import write_outputs
+
+
+def main() -> int:
+    sample_dir = ROOT / "sample_data"
+    output_dir = ROOT / "property-ocr-outputs"
+    records = extract_documents(sample_dir, enable_ocr=False)
+    write_outputs(records, output_dir)
+    print(f"Generated {len(records)} sample record(s) into {output_dir}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
