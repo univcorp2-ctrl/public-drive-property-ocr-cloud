@@ -1,4 +1,101 @@
-<h1>ワンさんツール</h1><p>LINE LIFF風の不動産ボリューム検討ツールです。note ID認証、画像/資料アップロード、OCR補助テキスト、土地ボリューム概算、CSV/Excel/TXT出力に対応します。</p><h2>どこを見るか</h2><ul><li><code>app/main.py</code>: API、認証、計算ロジック、出力生成</li><li><code>app/static/index.html</code>: 画面</li><li><code>docs/logic-flow.svg</code>: ロジック画像</li><li><code>docs/architecture.svg</code>: アーキテクチャ画像</li></ul><h2>計算根拠</h2><p>判定結果には <code>calculation_basis.steps</code> が入り、各ステップに「項目」「式」「代入値」「結果」「補足」が出ます。</p><ol><li>土地面積、用途地域、建ぺい率、容積率、前面道路幅員、平均住戸面積を抽出</li><li>最大建築面積 = 土地面積 × 建ぺい率 ÷ 100</li><li>道路幅員による容積率上限 = 前面道路幅員 × 係数 × 100</li><li>係数は住居系/不明なら0.4、商業系/工業系なら0.6</li><li>適用容積率 = 指定容積率と道路幅員制限の小さい方</li><li>最大延床面積 = 土地面積 × 適用容積率 ÷ 100</li><li>想定賃貸面積 = 最大延床面積 × 0.82</li><li>想定戸数 = 想定賃貸面積 ÷ 平均住戸面積を切り捨て</li><li>想定階数 = 最大延床面積 ÷ 最大建築面積を切り上げ</li></ol><h2>起動</h2><pre><code>python -m venv .venv
+# public-drive-property-ocr-cloud
+
+Public Google Drive フォルダ内の不動産資料 PDF / 画像 / テキストを GitHub Actions 上で処理し、OCR結果を **CSV / Excel / TXT** として `property-ocr-outputs` artifact にまとめる自動化repoです。
+
+対象 Drive folder ID:
+
+```text
+11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD
+```
+
+## できること
+
+- 公開 Google Drive フォルダから資料をダウンロード
+- PDF内のテキストを直接抽出
+- スキャンPDF / PNG / JPG / TIFF を Tesseract OCR で文字起こし
+- 不動産資料でよく使う項目を簡易抽出
+  - 物件名
+  - 所在地 / 住所
+  - 価格
+  - 土地面積
+  - 建物面積
+  - 間取り
+  - 築年月
+  - 交通
+  - 電話
+  - URL
+- `properties.csv`、`properties.xlsx`、ファイル別 `text/*.txt`、`summary.json` を生成
+- GitHub Actions artifact 名 `property-ocr-outputs` として保存
+
+## すぐ使う
+
+GitHub の **Actions** タブから `Property OCR` workflow を開き、**Run workflow** を押します。
+
+| input | default | 説明 |
+|---|---:|---|
+| `drive_folder_id` | `11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD` | 処理対象のGoogle DriveフォルダID |
+| `run_live_drive` | `true` | `true` のときDriveから取得、`false` のときサンプルデータで実行 |
+| `ocr_languages` | `jpn+eng` | Tesseract OCRの言語 |
+| `max_pdf_pages` | `8` | OCRするPDFページ上限 |
+
+完了後、workflow run の artifact から `property-ocr-outputs` をダウンロードしてください。
+
+## ローカル実行
+
+```bash
+python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload</code></pre><p>デモnote ID: <code>demo-note-001</code></p><h2>注意</h2><p>これは初期検討用の概算です。斜線制限、日影規制、高度地区、防火地域、条例、接道、敷地形状、天空率、駐車場附置義務などは別途確認してください。</p>
+pip install -e '.[dev]'
+
+# サンプルデータで実行
+property-ocr --input-dir sample_data --output-dir outputs --no-download
+
+# 公開Google Driveフォルダで実行
+property-ocr \
+  --drive-folder-id 11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD \
+  --output-dir outputs
+```
+
+OCRをローカルで使う場合は、OS側に Tesseract 本体も必要です。GitHub Actions と devcontainer では自動で入ります。
+
+## 出力
+
+```text
+outputs/
+  properties.csv
+  properties.xlsx
+  summary.json
+  text/
+    <source-file>.txt
+    all_text.txt
+```
+
+## CI/CD
+
+`.github/workflows/ocr.yml` で以下を自動化しています。
+
+- `workflow_dispatch`
+- `push`
+- `pull_request`
+- `actions/checkout@v4`
+- `actions/setup-python@v5`
+- 依存関係インストール
+- Ruff lint
+- pytest
+- サンプルまたはDrive OCR実行
+- `actions/upload-artifact@v4` による `property-ocr-outputs` アップロード
+
+GitHub公式のPython CIガイドでは、workflowでcheckout、Python setup、依存関係インストール、テストを組み合わせる形が案内されています。artifact upload は v4 系を使っています。
+
+## 注意
+
+- Google Drive フォルダは「リンクを知っている全員が閲覧可」など、GitHub Actions から取得可能な共有状態にしてください。
+- private Drive / Google Workspace 制限付きフォルダは、この初期版では対象外です。
+- OCR精度は元画像の解像度、傾き、文字サイズ、レイアウトに依存します。
+- 抽出項目は正規表現ベースの簡易抽出です。帳票フォーマットが固定なら `src/property_ocr/extract.py` の regex を追加してください。
+
+## ドキュメント
+
+- [アーキテクチャ](docs/architecture.md)
+- [初期設定ガイド](docs/setup.md)
+- [Codex向け開発メモ](CODEX.md)
