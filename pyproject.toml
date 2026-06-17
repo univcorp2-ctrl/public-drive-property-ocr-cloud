@@ -1,10 +1,43 @@
-[tool.ruff]
-line-length = 100
-src = ["app", "scripts", "tests"]
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[tool.ruff.lint]
-select = ["E9", "F"]
+[project]
+name = "public-drive-property-ocr-cloud"
+version = "0.1.0"
+description = "GitHub Actions OCR pipeline for public Google Drive property documents."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "GitHub-GPT Developer" }]
+dependencies = [
+    "gdown>=5.2.0",
+    "openpyxl>=3.1.2",
+    "Pillow>=10.0.0",
+    "pypdf>=4.0.0",
+    "PyMuPDF>=1.24.0",
+    "pytesseract>=0.3.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.5.0",
+]
+
+[project.scripts]
+property-ocr = "property_ocr.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
