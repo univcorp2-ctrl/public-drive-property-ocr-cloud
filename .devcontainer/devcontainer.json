@@ -1,20 +1,15 @@
 {
-  "name": "property-volume-liff-clone",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "name": "public-drive-property-ocr-cloud",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-python.python",
+        "ms-python.vscode-pylance",
         "charliermarsh.ruff"
       ]
     }
   },
-  "postCreateCommand": "pip install -r requirements.txt",
-  "forwardPorts": [8000],
-  "portsAttributes": {
-    "8000": {
-      "label": "FastAPI app",
-      "onAutoForward": "notify"
-    }
-  }
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-jpn && pip install -e '.[dev]'",
+  "remoteUser": "vscode"
 }
