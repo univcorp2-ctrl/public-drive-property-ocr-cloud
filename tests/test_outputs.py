@@ -25,4 +25,4 @@ def test_write_outputs_creates_all_formats(tmp_path: Path) -> None:
     workbook = load_workbook(tmp_path / "properties.xlsx")
     sheet = workbook["properties"]
     assert sheet["A1"].value == "source_file"
-    assert sheet["D2"].value == "テスト物件"
+    assert sheet["C2"].value == "テスト物件"
