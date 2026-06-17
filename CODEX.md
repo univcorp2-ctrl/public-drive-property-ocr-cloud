@@ -1,28 +1,42 @@
-# CODEX
+# CODEX.md
 
-## 実装目的
+このrepoは GitHub Actions 上で公開 Google Drive フォルダの不動産資料をOCRし、CSV / Excel / TXT artifactを作るためのPythonプロジェクトです。
 
-公開UXを参考に、LINE LIFF風の不動産ボリューム検討チャットを独自実装する。
+## 開発方針
 
-## 安全境界
+- Python 3.11+ を維持する
+- CLI entrypoint は `property-ocr`
+- 主処理は `src/property_ocr/` に置く
+- 外部サービスの実Secret値はrepoに入れない
+- 生成物は `outputs/` 配下にまとめる
+- workflow artifact 名は `property-ocr-outputs` を維持する
 
-- 第三者アプリの非公開APIを呼び出さない
-- 認証回避、note ID突破、トークン抽出を実装しない
-- 公開ページの文言や挙動から推定した一般機能のみを自前で再構成する
-- 個人情報や実物件情報は利用者が明示入力したものだけを処理する
+## 主要ファイル
 
-## コア機能
+- `src/property_ocr/cli.py`: CLI
+- `src/property_ocr/downloader.py`: Google Drive公開フォルダ取得
+- `src/property_ocr/extract.py`: PDF / image / txt 抽出、OCR、項目抽出
+- `src/property_ocr/outputs.py`: CSV / Excel / TXT / JSON出力
+- `.github/workflows/ocr.yml`: CIとOCR実行
+- `tests/`: 単体テスト
 
-1. LIFF SDK対応フロント
-2. note ID許可リスト認証
-3. ファイルアップロード
-4. OCR抽出レイヤー
-5. ボリューム概算ロジック
-6. CSV / Excel / TXT出力
-7. GitHub Actionsでartifact化
+## 実行例
 
-## 実装上の注意
+```bash
+pip install -e '.[dev]'
+property-ocr --input-dir sample_data --output-dir outputs --no-download
+property-ocr --drive-folder-id 11cA-CrY7rjlQlzdXywpT3i7PLRrXxOgD --output-dir outputs
+```
 
-- OCRは `app/services/ocr.py` に閉じ込めてあるため、Google Vision、Azure AI Vision、AWS Textractなどに置換しやすい。
-- 判定ロジックは `app/services/volume.py` に閉じ込めてある。
-- 法的な建築可否を保証するものではなく、初期検討用の概算である。
+## テスト
+
+```bash
+ruff check .
+pytest -q
+```
+
+## 変更時の注意
+
+- Drive取得処理はネットワーク依存なので、単体テストでは直接Driveへアクセスしない。
+- OCR本体はTesseractバイナリに依存するため、テキストPDFやtxtで通るテストを維持する。
+- GitHub Actionsでは `actions/checkout@v4`、`actions/setup-python@v5`、`actions/upload-artifact@v4` を使う。
